@@ -18,6 +18,7 @@ jobs:
           host: 13.201.78.81
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
+          target: ci-cd-demo
           port: 22
           script: |
             ls
