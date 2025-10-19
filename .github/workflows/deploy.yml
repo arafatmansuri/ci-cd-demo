@@ -45,10 +45,15 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
           script: |
-            rm -rf ~/ci-cd-demo
-            mkdir ~/ci-cd-demo
-            tar -xzf ~/ci-cd-demo.tar.gz -C ~/ci-cd-demo
-            cd ~/ci-cd-demo
+            # Load environment paths for Node and PM2
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+            rm -rf ~/next-app
+            mkdir ~/next-app
+            tar -xzf ~/next-app.tar.gz -C ~/next-app
+            cd ~/next-app
             npm ci --omit=dev
             pm2 delete nextjs || true
-            pm2 start npm --name "cid1" -- run start
+            pm2 start npm --name "nextjs" -- run start
