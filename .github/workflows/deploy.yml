@@ -50,10 +50,10 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-            rm -rf ~/next-app
-            mkdir ~/next-app
-            tar -xzf ~/next-app.tar.gz -C ~/next-app
-            cd ~/next-app
+            rm -rf ~/ci-cd-demo
+            mkdir ~/ci-cd-demo
+            tar -xzf ~/ci-cd-demo.tar.gz -C ~/ci-cd-demo
+            cd ~/ci-cd-demo
             npm ci --omit=dev
             pm2 delete nextjs || true
             pm2 start npm --name "nextjs" -- run start
