@@ -1,24 +1,61 @@
-name: Deploy NextJs
+name: Deploy Next.js to EC2
 
 on:
   push:
+    branches:
+      - main  # or the branch you deploy from
 
 jobs:
   deploy:
-    name: Push to EC2
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Execute remote SSH commands using password
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Export static files (optional for static deployment)
+        run: npm run export || echo "Skipping export step"
+
+      # ✅ Create a tarball of the .next, package.json, etc.
+      - name: Prepare deployment package
+        run: |
+          mkdir deploy
+          cp -r .next package.json package-lock.json next.config.js deploy/
+          cd deploy && tar -czf ../next-app.tar.gz .
+
+      # ✅ Upload the build to EC2 and restart app
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 13.201.78.81
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}  # Use private key, not password
+          port: 22
+          source: "next-app.tar.gz"
+          target: "/home/ubuntu/ci-cd-demo"
+
+      - name: Run commands on EC2
         uses: appleboy/ssh-action@v1
         with:
           host: 13.201.78.81
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
-          target: ci-cd-demo
           port: 22
           script: |
-            ls
+            cd ~/ci-cd-demo
+            tar -xzf next-app.tar.gz
+            rm -rf next-app.tar.gz
+            npm ci --omit=dev
+            pm2 restart all || pm2 start npm --name "next-app" -- start
